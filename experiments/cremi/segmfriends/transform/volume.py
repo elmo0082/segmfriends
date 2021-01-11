@@ -66,11 +66,12 @@ class MergeExtraMasks(Transform):
             raw_data, augmented_defected_mask = raw_data
             extra_masks[augmented_defected_mask.astype('bool')] = self.defects_label
 
-        if extra_masks is not None:
-            # Concatenate labels in one tensor:
-            gt = np.stack([gt,extra_masks])
+        # TODO modified this
+        #if extra_masks is not None:
+        #    # Concatenate labels in one tensor:
+        #    gt = np.stack([gt,extra_masks])
 
-        return (raw_data, gt)
+        return (raw_data, gt, extra_masks)
 
 
 class ReplicateTensorsInBatch(Transform):

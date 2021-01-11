@@ -1,8 +1,12 @@
 shortcuts:
-  z_size: &z_size 6
-  xy_size: &xy_size 136
-  xy_size_precrop: &xy_size_precrop 302
-  stride: &stride [5, 90, 90]
+  z_size: &z_size 6 # double all the values if necessary
+  xy_size: &xy_size 136 # double all the values if necessary
+  xy_size_precrop: &xy_size_precrop 151 # double all the values if necessary
+  stride: &stride [5, 90, 90] # double all the values if necessary
+  #z_size: &z_size 12 # double all the values if necessary
+  #xy_size: &xy_size 272 # double all the values if necessary
+  #xy_size_precrop: &xy_size_precrop 302 # double all the values if necessary
+  #stride: &stride [10, 180, 180] # double all the values if necessary
 
 device: cuda
 
@@ -184,9 +188,9 @@ loaders:
       # Raw data
       raw:
         path:
-          A: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_A.h5'
-          B: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_B.h5'
-          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C.h5'
+          A: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_A_with_boundaries.h5'
+          B: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_B_with_boundaries.h5'
+          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C_with_boundaries.h5'
         path_in_file: 'volumes/raw'
         dtype: float32
         sigma: 0.025
@@ -196,14 +200,21 @@ loaders:
       # Segmentation
       segmentation:
         path:
-          A: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_A.h5'
-          B: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_B.h5'
-          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C.h5'
+          A: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_A_with_boundaries.h5'
+          B: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_B_with_boundaries.h5'
+          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C_with_boundaries.h5'
         path_in_file: 'volumes/labels/neuron_ids'
         dtype: int32
 #        padding_mode: "constant"
 #        padding: *dataset_padding
-
+      
+      boundary:
+        path:
+          A: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_A_with_boundaries.h5'
+          B: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_B_with_boundaries.h5'
+          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C_with_boundaries.h5'
+        path_in_file: 'volumes/labels/boundary_maps'
+        dtype: int32
 
 
   val:
@@ -224,7 +235,7 @@ loaders:
     volume_config:
       raw:
         path:
-          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C.h5'
+          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C_with_boundaries.h5'
         path_in_file: 'volumes/raw'
         dtype: float32
 #        sigma: 0.025
@@ -232,11 +243,17 @@ loaders:
 #        padding: *dataset_padding
       segmentation:
         path:
-          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C.h5'
+          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C_with_boundaries.h5'
         path_in_file: 'volumes/labels/neuron_ids'
         dtype: int32
 #        padding_mode: "constant"
 #        padding: *dataset_padding
+      # Boundaries
+      boundary:
+        path:
+          C: '/export/home/jgrieser/datasets/CREMI/paddedData/sample_C_with_boundaries.h5'
+        path_in_file: 'volumes/labels/boundary_maps'
+        dtype: int32
 
 
 model:
@@ -264,11 +281,11 @@ model:
 
 trainer:
   max_epochs: 999 # basically infinite
-  num_targets: 1
+  num_targets: 1 # We need two targets to allow to include boundary probability maps
 
   criterion:
-    loss_name: "inferno.extensions.criteria.set_similarity_measures.SorensenDiceLoss"
-    kwargs: {}
+    loss_name: "rasenna.criteria.CustomLossFunctions.TopologicalLoss"
+    kwargs: {"g_factor": 0.1} # Choice of g_factor weights Sorensen-Dice loss against topological loss.
     transforms:
       - neurofire.criteria.loss_transforms.RemoveSegmentationFromTarget: {}
       - segmfriends.transform.volume.ApplyAndRemoveMask: {first_invert_target: True}
@@ -288,7 +305,7 @@ trainer:
 
   tensorboard:
     log_scalars_every: [1, 'iterations']
-    log_images_every: [500, 'iterations']
+    log_images_every: [1, 'iterations']
     log_histograms_every: 'never'
     send_image_at_batch_indices: [0]
     send_image_at_channel_indices: [0]
@@ -319,34 +336,33 @@ trainer:
 
 
 
-firelight:
-  affinities:
-    ImageGridVisualizer:
+# firelight:
+#   affinities:
+#     ImageGridVisualizer:
+      
+#       input_mapping:
+#         global: [B: 0, D: "3:9"] # the mapping specified in 'global' is applied to all keys
+#       pad_width: 1  # width of the border between images in pixels
+#       pad_value: .2  # intensity of the border pixels
+#       upsampling_factor: 1  # the whole grid is upsampled by this factor
 
-      input_mapping:
-        global: [B: 0, D: "3:9"] # the mapping specified in 'global' is applied to all keys
+#       row_specs: ['H', 'S', 'B', 'C', 'V']
+#       column_specs: ['W', 'D']
 
-      pad_width: 1  # width of the border between images in pixels
-      pad_value: .2  # intensity of the border pixels
-      upsampling_factor: 1  # the whole grid is upsampled by this factor
+#       visualizers:
 
-      row_specs: ['H', 'S', 'B', 'C', 'V']
-      column_specs: ['W', 'D']
-
-      visualizers:
-
-        - SegmentationVisualizer:
-            input: ['target', index: 0, C: 0]
-            background_label: 0
-        - IdentityVisualizer:
-            input: ['inputs', index: 0]
-            cmap: gray
-        - IdentityVisualizer:
-            input: ['prediction', index: 0, C: ":10"]
-            cmap: gray
-            value_range: [0,1]
-        - IdentityVisualizer:
-            input: ['target', index: 0, C: "1:11"]
-            cmap: gray_r
-            value_range: [0,1]
+#         - SegmentationVisualizer:
+#             input: ['target', index: 0, C: 0]
+#             background_label: 0
+#         - IdentityVisualizer:
+#             input: ['inputs', index: 0]
+#             cmap: gray
+#         - IdentityVisualizer:
+#             input: ['prediction', index: 0, C: ":10"]
+#             cmap: gray
+#             value_range: [0,1]
+#         - IdentityVisualizer:
+#             input: ['target', index: 0, C: "1:11"]
+#             cmap: gray_r
+#             value_range: [0,1]
 

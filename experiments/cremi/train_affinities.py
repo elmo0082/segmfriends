@@ -8,6 +8,7 @@ import neurofire
 import confnets
 import inferno
 import segmfriends
+import rasenna
 
 
 from inferno.io.transform import Compose
@@ -32,12 +33,12 @@ class BaseCremiExperiment(BaseExperiment, InfernoMixin, TensorboardMixin):
         if config is not None:
             self.read_config_file(config)
 
-
         self.DEFAULT_DISPATCH = 'train'
         self.auto_setup()
 
-        # register_logger(FirelightLogger, "image")
+        register_logger(self, 'images')
         register_logger(self, 'scalars')
+        register_logger(self, 'figures')
 
         self.model_class = self.get('model/model_class')
 
@@ -67,7 +68,7 @@ class BaseCremiExperiment(BaseExperiment, InfernoMixin, TensorboardMixin):
         loss_kwargs = self.get("trainer/criterion/kwargs", {})
         # from vaeAffs.models.losses import EncodingLoss, PatchLoss, PatchBasedLoss, StackedAffinityLoss
         loss_name = self.get("trainer/criterion/loss_name",
-                             "inferno.extensions.criteria.set_similarity_measures.SorensenDiceLoss")
+                             "rasenna.criteria.CustomLossFunctions.TopologicalLoss")
         loss_config = {loss_name: loss_kwargs}
 
         criterion = create_instance(loss_config, self.CRITERION_LOCATIONS)

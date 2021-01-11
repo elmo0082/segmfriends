@@ -1,6 +1,7 @@
 from copy import deepcopy
 from torch.utils.data.dataloader import DataLoader, default_collate
 import numpy as np
+from rasenna.utils.cremi.utils import save_everywhere
 
 try:
     from inferno.io.core import ZipReject, Concatenate
@@ -86,19 +87,25 @@ class CremiDataset(ZipReject):
         segmentation_volume_kwargs.update(slicing_config)
         self.affinity_config = segmentation_volume_kwargs.pop('affinity_config', None)
         # Build segmentation volume
-        self.segmentation_volume = SegmentationVolume(name=name,
-                                                      **segmentation_volume_kwargs)
+        self.segmentation_volume = SegmentationVolume(name=name, **segmentation_volume_kwargs)
 
-        volumes_to_load = [self.raw_volume, self.segmentation_volume]
+        # Get kwargs for boundary volume
+        boundary_volume_kwargs = dict(volume_config.get('boundary'))
+        boundary_volume_kwargs.update(slicing_config)
+        # Build boundary volume
+        self.boundary_volume = RawVolume(name=name,**boundary_volume_kwargs)
+
+        volumes_to_load = [self.raw_volume, self.segmentation_volume, self.boundary_volume]
 
         # Load additional masks:
-        self.extra_masks_volume = None
-        if volume_config.get('extra_masks', False):
-            extra_masks_kwargs = dict(volume_config.get('extra_masks'))
-            extra_masks_kwargs.update(slicing_config)
-            self.extra_masks_volume = SegmentationVolume(name=name,
-                                                         **extra_masks_kwargs)
-            volumes_to_load.append(self.extra_masks_volume)
+        # self.extra_masks_volume = None
+        # if volume_config.get('extra_masks', False):
+        #     print('Adding extra_mask...')
+        #     extra_masks_kwargs = dict(volume_config.get('extra_masks'))
+        #     extra_masks_kwargs.update(slicing_config)
+        #     self.extra_masks_volume = SegmentationVolume(name=name,
+        #                                                  **extra_masks_kwargs)
+        #     volumes_to_load.append(self.extra_masks_volume)
 
         rejection_threshold = volume_config.get('rejection_threshold', 0.5)
         super().__init__(*volumes_to_load,
@@ -119,10 +126,11 @@ class CremiDataset(ZipReject):
             transforms.add(RandomFlip3D())
             transforms.add(RandomRotate())
 
-        transforms.add(DuplicateGtDefectedSlices(
-            defects_label=self.master_config.get('defects_label', 3),
-            ignore_label=self.master_config.get('ignore_label', 0))
-        )
+        # We do not need this data augumentation for our purposes - Jamie
+        # transforms.add(DuplicateGtDefectedSlices(
+        #    defects_label=self.master_config.get('defects_label', 3),
+        #    ignore_label=self.master_config.get('ignore_label', 0))
+        # )
 
         # Elastic transforms can be skipped by
         # setting elastic_transform to false in the
@@ -133,7 +141,6 @@ class CremiDataset(ZipReject):
                 transforms.add(ElasticTransform(alpha=elastic_transform_config.get('alpha', 2000.),
                                                 sigma=elastic_transform_config.get('sigma', 50.),
                                                 order=elastic_transform_config.get('order', 0)))
-
         # random slide augmentation
         if self.master_config.get('random_slides') is not None:
             random_slides_config = deepcopy(self.master_config.get('random_slides'))
@@ -166,7 +173,7 @@ class CremiDataset(ZipReject):
                 affs_kwargs.update(affs_config[input_index])
                 transforms.add(aff_transform(apply_to=[input_index+nb_inputs], **affs_kwargs))
 
-        # crop invalid affinity labels and elastic augment reflection padding assymetrically
+        # crop invalid affinity labels and elastic augment reflection padding asymetrically
         crop_config = self.master_config.get('crop_after_target', {})
         if crop_config:
             # One might need to crop after elastic transform to avoid edge artefacts of affinity
@@ -209,6 +216,7 @@ class CremiDatasets(Concatenate):
                                      defect_augmentation_config=defect_augmentation_config,
                                      master_config=master_config)
                         for name in names]
+
         super().__init__(*datasets)
         self.transforms = self.get_transforms()
 
@@ -230,8 +238,7 @@ class CremiDatasets(Concatenate):
 
 
 class RejectSingleLabelVolumes(object):
-    def __init__(self, threshold, threshold_zero_label=1.,
-                 defected_label=None):
+    def __init__(self, threshold, threshold_zero_label=1., defected_label=None):
         """
         :param threshold: If the biggest segment takes more than 'threshold', batch is rejected
         :param threshold_zero_label: if the percentage of non-zero-labels is less than this, reject
@@ -245,7 +252,6 @@ class RejectSingleLabelVolumes(object):
         # Check if we should reject:
         return ((float(np.max(counts)) / fetched.size) > self.threshold) or (
                     (counts[1:].sum() / fetched.size) < self.threshold_zero_label)
-
 
 
 def get_cremi_loader(config):
@@ -285,3 +291,4 @@ def collate_indices(batch):
     tensor_list = [itm[0] for itm in batch]
     indices_list = [itm[1] for itm in batch]
     return default_collate(tensor_list), indices_list
+
