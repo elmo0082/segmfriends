@@ -3,10 +3,10 @@ shortcuts:
   xy_size: &xy_size 136 # double all the values if necessary
   xy_size_precrop: &xy_size_precrop 151 # double all the values if necessary
   stride: &stride [5, 90, 90] # double all the values if necessary
-  #z_size: &z_size 12 # double all the values if necessary
-  #xy_size: &xy_size 272 # double all the values if necessary
-  #xy_size_precrop: &xy_size_precrop 302 # double all the values if necessary
-  #stride: &stride [10, 180, 180] # double all the values if necessary
+  # z_size: &z_size 6 # double all the values if necessary
+  # xy_size: &xy_size 272 # double all the values if necessary
+  # xy_size_precrop: &xy_size_precrop 302 # double all the values if necessary
+  # stride: &stride [10, 180, 180] # double all the values if necessary
 
 device: cuda
 
@@ -257,12 +257,11 @@ loaders:
 
 
 model:
+# --- Modifications to the model to add an additional output branch for boundary prediction using persistent homology --- #
   model_class: confnets.models.MultiScaleInputMultiOutputUNet
   model_kwargs:
     depth: 3
     in_channels: 1
-    #out_channels: 20
-    #final_activation: "Sigmoid"
     output_branches_specs: 
       global:
         activation: "Sigmoid"
@@ -272,6 +271,7 @@ model:
       1:
         depth: 0
         out_channels: 1
+# ----------------------------------------------------------------------------------------------------------------------- #
 
     upsampling_mode: 'nearest'
     res_blocks_specs: [[True], [True], [True], [True]]
@@ -287,19 +287,17 @@ model:
 #      1: ":, 4:-4, 4:-4"
 #      2: ":, 2:-2, 2:-2"
 
-
-
 trainer:
   max_epochs: 999 # basically infinite
   num_targets: 2 # We need two targets to allow to include boundary probability maps
 
   criterion:
     loss_name: "rasenna.criteria.CustomLossFunctions.TopologicalLoss"
-    kwargs: {"g_factor": 0.1} # Choice of g_factor weights Sorensen-Dice loss against topological loss.
+    kwargs: {"SD_weight": 1.0, "topo_weight": 1.0, "topo_SD_weight": 1.0, "pretraining": False} # Choice of g_factor weights Sorensen-Dice loss against topological loss.
     # transforms:
-      # have both been implemented in the prepare_target function in utils.py
+      # have both been implemented in the prepare_target function in utils.py - Jamie
       # - neurofire.criteria.loss_transforms.RemoveSegmentationFromTarget: {} # just does [1:]
-      # - segmfriends.transform.volume.ApplyAndRemoveMask: {first_invert_target: True}
+      # - segmfriends.transform.volume.ApplyAndRemoveMask: {first_invert_target: True} # target is inverted manuall in CustomLossFunctions.py
 
   optimizer:
     Adam:
@@ -316,7 +314,8 @@ trainer:
 
   tensorboard:
     log_scalars_every: [1, 'iterations']
-    log_images_every: [1, 'iterations']
+    log_images_every: [1000, 'iterations']
+    log_persistence_diagrams_every: [1000, 'iterations']
     log_histograms_every: 'never'
     send_image_at_batch_indices: [0]
     send_image_at_channel_indices: [0]
@@ -344,8 +343,6 @@ trainer:
 #        cooldown_duration: '50000 iterations'
         consider_improvement_with_respect_to: 'previous'
         verbose: True
-
-
 
 firelight:
   affinities:

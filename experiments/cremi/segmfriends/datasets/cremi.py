@@ -89,23 +89,34 @@ class CremiDataset(ZipReject):
         # Build segmentation volume
         self.segmentation_volume = SegmentationVolume(name=name, **segmentation_volume_kwargs)
 
-        # Get kwargs for boundary volume
-        boundary_volume_kwargs = dict(volume_config.get('boundary'))
-        boundary_volume_kwargs.update(slicing_config)
-        # Build boundary volume
-        self.boundary_volume = RawVolume(name=name,**boundary_volume_kwargs)
+        volumes_to_load = [self.raw_volume, self.segmentation_volume]
 
-        volumes_to_load = [self.raw_volume, self.segmentation_volume, self.boundary_volume]
+         # --- Jamie's modification ------------------------------------------------------ #
+
+        """
+        This code adds an additional data loader for the boundary map 
+        which then can be used to calculate topological features to improve predictions.
+        """
+        if 'boundary' in volume_config:
+            print('Boundary volume detected...')
+            # Get kwargs for boundary volume
+            boundary_volume_kwargs = dict(volume_config.get('boundary'))
+            boundary_volume_kwargs.update(slicing_config)
+            # Build boundary volume
+            self.boundary_volume = RawVolume(name=name,**boundary_volume_kwargs)
+            volumes_to_load.append(self.boundary_volume)
+        
+        # -------------------------------------------------------------------------------- #
 
         # Load additional masks:
-        # self.extra_masks_volume = None
-        # if volume_config.get('extra_masks', False):
-        #     print('Adding extra_mask...')
-        #     extra_masks_kwargs = dict(volume_config.get('extra_masks'))
-        #     extra_masks_kwargs.update(slicing_config)
-        #     self.extra_masks_volume = SegmentationVolume(name=name,
-        #                                                  **extra_masks_kwargs)
-        #     volumes_to_load.append(self.extra_masks_volume)
+        self.extra_masks_volume = None
+        if volume_config.get('extra_masks', False):
+            print('Adding extra_mask...')
+            extra_masks_kwargs = dict(volume_config.get('extra_masks'))
+            extra_masks_kwargs.update(slicing_config)
+            self.extra_masks_volume = SegmentationVolume(name=name,
+                                                         **extra_masks_kwargs)
+            volumes_to_load.append(self.extra_masks_volume)
 
         rejection_threshold = volume_config.get('rejection_threshold', 0.5)
         super().__init__(*volumes_to_load,
@@ -237,6 +248,38 @@ class CremiDatasets(Concatenate):
                    slicing_config=slicing_config, master_config=master_config)
 
 
+class CremiDatasetInference(RawVolume):
+    # TODO: somehow merge with the trainer loader...
+    def __init__(self, master_config, **super_kwargs):
+        super(CremiDatasetInference, self).__init__(return_index_spec=True,
+                                                    **super_kwargs)
+        self.transforms = self.get_additional_transforms(master_config)
+
+    def get_additional_transforms(self, master_config):
+        transforms = self.transforms if self.transforms is not None else Compose()
+
+        master_config = {} if master_config is None else master_config
+
+        # Replicate and downscale batch:
+        if master_config.get("downscale_and_crop") is not None:
+            ds_config = master_config.get("downscale_and_crop")
+            apply_to  = [conf.pop('apply_to') for conf in ds_config]
+            transforms.add(ReplicateTensorsInBatch(apply_to))
+            for indx, conf in enumerate(ds_config):
+                transforms.add(DownSampleAndCropTensorsInBatch(apply_to=[indx], order=None, **conf))
+
+        # crop invalid affinity labels and elastic augment reflection padding assymetrically
+        crop_config = master_config.get('crop_after_target', {})
+        if crop_config:
+            # One might need to crop after elastic transform to avoid edge artefacts of affinity
+            # computation being warped into the FOV.
+            transforms.add(VolumeAsymmetricCrop(**crop_config))
+
+        transforms.add(AsTorchBatch(3, add_channel_axis_if_necessary=True))
+
+        return transforms
+
+
 class RejectSingleLabelVolumes(object):
     def __init__(self, threshold, threshold_zero_label=1., defected_label=None):
         """
@@ -273,7 +316,6 @@ def get_cremi_loader(config):
     inference_mode = config.get('inference_mode', False)
 
     if inference_mode:
-        raise NotImplementedError("Inference loader not yet implemented")
         datasets = CremiDatasetInference(
             config.get("master_config"),
             name=config.get('name'),

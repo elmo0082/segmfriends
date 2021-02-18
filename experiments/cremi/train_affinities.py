@@ -38,7 +38,7 @@ class BaseCremiExperiment(BaseExperiment, InfernoMixin, TensorboardMixin):
 
         register_logger(self, 'images')
         register_logger(self, 'scalars')
-        register_logger(self, 'figures')
+        register_logger(self, 'persistence_diagrams')
 
         self.model_class = self.get('model/model_class')
 
