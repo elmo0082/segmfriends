@@ -1,4 +1,4 @@
-from pathutils import get_home_dir, get_trendytukan_drive_dir, change_paths_config_file 
+from pathutils import get_home_dir,  change_paths_config_file 
 import sys 
 sys.path.append("../ConfNets") 
 import numpy as np
