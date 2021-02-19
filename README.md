@@ -22,4 +22,6 @@ For running all deep-learning experiments, at the moment the following dependenc
 - `affogato`: https://github.com/constantinpape/affogato/tree/affinities-with-glia (branch `affinities-with-glia`)
 - (for evaluation scores, install module `cremi`: https://github.com/constantinpape/cremi_python/tree/py3)
 
+To install `affogato`, on has to build the module using ```conda build .``` and then install the corresponding package by hand (can be found in the build directory of your activated conda environment).
+
 Coming soon: `segmfriend` conda-package
