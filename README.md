@@ -13,10 +13,10 @@ This version can run most of the clustering/segmentation algorithms included:
 
 ### Full version
 For running all deep-learning experiments, at the moment the following dependencies are required:
-- `conda create -n segmFr -c abailoni -c conda-forge -c pytorch nifty vigra cython inferno`
-    - See `inferno` package here: https://github.com/inferno-pytorch/inferno
+- `conda create -n segmFr -c abailoni -c conda-forge -c pytorch nifty vigra cython`
+- `inferno` : https://github.com/elmo0082/inferno
 - `firelight`: https://github.com/inferno-pytorch/firelight
-- `speedrun`: https://github.com/inferno-pytorch/speedrun/tree/new_import (branch `new_import`)
+- `speedrun`: https://github.com/elmo0082/speedrun 
 - `neurofire`: https://github.com/abailoni/neurofire
 - `ConfNets`: https://github.com/imagirom/ConfNets/tree/multi-scale-unet - (branch `multi-scale-unet`)
 - `affogato`: https://github.com/constantinpape/affogato/tree/affinities-with-glia (branch `affinities-with-glia`)
