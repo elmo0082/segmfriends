@@ -13,7 +13,7 @@ This version can run most of the clustering/segmentation algorithms included:
 
 ### Full version
 For running all deep-learning experiments, at the moment the following dependencies are required:
-- `conda create -n segmFr -c abailoni -c conda-forge -c pytorch nifty vigra cython`
+- `conda create -n segmFr -c abailoni -c conda-forge -c pytorch nifty vigra cython pybind11`
 - `inferno` : https://github.com/elmo0082/inferno
 - `firelight`: https://github.com/inferno-pytorch/firelight
 - `speedrun`: https://github.com/elmo0082/speedrun 
