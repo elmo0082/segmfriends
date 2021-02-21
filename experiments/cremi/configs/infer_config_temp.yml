@@ -37,15 +37,9 @@ loaders:
         B: *dataset_padding
         C: *dataset_padding
       path:
-        A: '/home_sdb/jgrieser_tmp/datasets/CREMI/paddedData/sample_A_with_boundaries.h5' # change path if needed
+        A: '/home_sdb/jgrieser_tmp/datasets/CREMI/paddedData/sample_A_with_boundaries.h5'
         B: '/home_sdb/jgrieser_tmp/datasets/CREMI/paddedData/sample_B_with_boundaries.h5'
         C: '/home_sdb/jgrieser_tmp/datasets/CREMI/paddedData/sample_C_with_boundaries.h5'
-
-        
-        # Alberto's paths to the data
-        #A: '/home_sdb/jgrieser_tmp/datasets/CREMI/padded_data/sample_A_2x.h5' # change path if needed
-        #B: '/home_sdb/jgrieser_tmp/datasets/CREMI/padded_data/sample_B_2x.h5'
-        #C: '/home_sdb/jgrieser_tmp/datasets/CREMI/padded_data/sample_C_2x.h5'
       path_in_file: 'volumes/raw'
       dtype: float32
 
