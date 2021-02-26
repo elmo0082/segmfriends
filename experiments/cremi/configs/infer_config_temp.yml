@@ -30,7 +30,7 @@ loaders:
         - *xy_size
         - *xy_size
       stride: [40, 40, 40] # Not needed anymore, automatically deduced during inference
-      data_slice: '100:102,:,:'
+      data_slice: '35:65,:,:'
       padding_mode: "reflect" # removed, see above
       padding:
         A: *dataset_padding
