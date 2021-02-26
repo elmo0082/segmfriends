@@ -1,4 +1,4 @@
-from pathutils import get_home_dir,  change_paths_config_file 
+from pathutils import get_home_dir, get_trendytukan_drive_dir, change_paths_config_file 
 import sys 
 sys.path.append("../ConfNets") 
 import numpy as np
@@ -167,8 +167,8 @@ def cremi_score_per_slice(gt, seg, return_all_metrics=False):
             voi_merge = np.nan
             arand = np.nan
         else:
-            voi_split, voi_merge = cremi.voi(gt[i], seg[i])
-            arand = cremi.adapted_rand(gt[i], seg[i])
+            voi_split, voi_merge = cremi.voi(seg[i], gt[i])
+            arand = cremi.adapted_rand(seg[i], gt[i])
         vois_split.append(voi_split)
         vois_merge.append(voi_merge)
         arands.append(arand)
@@ -247,9 +247,13 @@ if __name__ == '__main__':
     # run connected components
     # reload network output
     with h5py.File(os.path.join(sys.argv[1], f"predictions_sample_{test_vol_config['name']}.h5"), "r") as file:
-        boundary_probs = file["data"][:]
-
-    boundary_probs = boundary_probs[0]
+        affs = file["data"][:]
+    if affs.shape[0] == 1: # predictions for boundary prob
+        boundary_probs = affs[0]
+    elif affs.shape[0] == 20: # predictions for 3D offsets
+        boundary_probs = (affs[1] + affs[2]) / 2
+    else:  # predictions for 2D offsets
+        boundary_probs = (affs[0] + affs[1]) / 2
 
     # compute connected components and save
     pred_seg = connected_components_per_slice(boundary_probs, cls._config["inference"]["threshold"])
@@ -258,7 +262,7 @@ if __name__ == '__main__':
         file.create_dataset("pred_seg", data=pred_seg)
 
     # load GT
-    with h5py.File(get_home_dir() + f"datasets/CREMI/paddedData/sample_{test_vol_config['name']}_with_boundaries.h5", "r") as file:
+    with h5py.File(get_home_dir() + f"datasets/sample_{test_vol_config['name']}_with_boundaries.h5", "r") as file:
         gt = file["volumes"]["labels"]["neuron_ids"][:]
 
     # slice appropriately
