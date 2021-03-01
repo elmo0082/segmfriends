@@ -3,7 +3,7 @@ Bunch of tools and experiments for image segmentation
 
 ### Full version
 For running all deep-learning experiments, at the moment the following dependencies are required:
-- `conda create -n segmFr -c abailoni -c conda-forge -c pytorch nifty vigra cython yaml`
+- `conda create -n segmFr -c abailoni -c conda-forge -c pytorch nifty vigra cython yaml opencv`
 - `inferno` : https://github.com/elmo0082/inferno/tree/matplotlib-plotting - (branch `matplotlib-plotting`)
 - `firelight`: https://github.com/inferno-pytorch/firelight
 - `speedrun`: https://github.com/elmo0082/speedrun/tree/matplotlib-plotting - (branch `matplotlib-plotting`)
@@ -12,3 +12,8 @@ For running all deep-learning experiments, at the moment the following dependenc
 - `affogato`: https://github.com/constantinpape/affogato/tree/affinities-with-glia (branch `affinities-with-glia`)
 - (for evaluation scores, install module `cremi`: https://github.com/constantinpape/cremi_python/tree/py3)
 
+
+### Building affogata
+
+The package ```affogato``` has to be built using ```conda build .``` in the root directory.
+You 
