@@ -255,12 +255,6 @@ if __name__ == '__main__':
     else:  # predictions for 2D offsets
         boundary_probs = (affs[0] + affs[1]) / 2
 
-    # compute connected components and save
-    pred_seg = connected_components_per_slice(boundary_probs, cls._config["inference"]["threshold"])
-    threshold_str =  "_".join(str(cls._config["inference"]["threshold"]).split("."))
-    with h5py.File(os.path.join(sys.argv[1], f"predicted_segmentation_sample_{test_vol_config['name']}_{threshold_str}.h5"), "w") as file:
-        file.create_dataset("pred_seg", data=pred_seg)
-
     # load GT
     with h5py.File(get_home_dir() + f"datasets/CREMI/paddedData/sample_{test_vol_config['name']}_with_boundaries.h5", "r") as file:
         gt = file["volumes"]["labels"]["neuron_ids"][:]
@@ -270,24 +264,35 @@ if __name__ == '__main__':
     z_slice_1, z_slice_2 = z_slice_str.split(":")
     z_slice_1 = int(z_slice_1) if z_slice_1 != "" else None
     z_slice_2 = int(z_slice_2) if z_slice_2 != "" else None
- 
+
     gt = gt[z_slice_1: z_slice_2]
 
-    assert gt.shape == pred_seg.shape, f"GT and prediction should have same shape but have shapes {gt.shape} and {pred_seg.shape}"
+    # compute connected components and save
+    thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
-    # compute cremi scores
-    cremi_scores = cremi_score_per_slice(gt, pred_seg)
+    for thd in thresholds:
+        pred_seg = connected_components_per_slice(boundary_probs, thd)
 
-    with open(os.path.join(sys.argv[1], f"cremi_scores_{threshold_str}"), "w") as file:
-        for score in cremi_scores:
-            file.write(f"{score}\n")
+        assert gt.shape == pred_seg.shape, f"GT and prediction should have same shape but have shapes {gt.shape} and {pred_seg.shape}"
 
-    # omit slices without cells
-    cremi_scores = cremi_scores[~np.isnan(cremi_scores)]
-    print(cremi_scores)
-    avg_score = np.array(cremi_scores).mean()
+        threshold_str =  "_".join(str(thd).split("."))
+        print(threshold_str)
+        with h5py.File(os.path.join(sys.argv[1], f"predicted_segmentation_sample_{test_vol_config['name']}_{threshold_str}.h5"), "w") as file:
+            file.create_dataset("pred_seg", data=pred_seg)
 
-    print(f"CREMI score averaged across slices: {avg_score}")
+        # compute cremi scores
+        cremi_scores = cremi_score_per_slice(gt, pred_seg)
+
+        with open(os.path.join(sys.argv[1], f"cremi_scores_{threshold_str}"), "w") as file:
+            for score in cremi_scores:
+                file.write(f"{score}\n")
+
+        # omit slices without cells
+        cremi_scores = cremi_scores[~np.isnan(cremi_scores)]
+        print(cremi_scores)
+        avg_score = np.array(cremi_scores).mean()
+
+        print(f"CREMI score averaged across slices: {avg_score}")
 
 
 

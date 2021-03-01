@@ -30,16 +30,16 @@ loaders:
         - *xy_size
         - *xy_size
       stride: [40, 40, 40] # Not needed anymore, automatically deduced during inference
-      data_slice: '35:65,:,:'
+      data_slice: ':,:,:'
       padding_mode: "reflect" # removed, see above
       padding:
         A: *dataset_padding
         B: *dataset_padding
         C: *dataset_padding
       path:
-        A: '$HCI_HOME/datasets/sample_A_with_boundaries.h5' # change path if needed
-        B: '$HCI_HOME/datasets/sample_B_with_boundaries.h5'
-        C: '$HCI_HOME/datasets/sample_C_with_boundaries.h5'
+        A: '$HCI_HOME/datasets/CREMI/paddedData/sample_A_with_boundaries.h5' # change path if needed
+        B: '$HCI_HOME/datasets/CREMI/paddedData/sample_B_with_boundaries.h5'
+        C: '$HCI_HOME/datasets/CREMI/paddedData/sample_C_with_boundaries.h5'
 
         
         # Alberto's paths to the data
