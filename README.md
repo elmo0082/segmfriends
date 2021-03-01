@@ -13,7 +13,7 @@ This version can run most of the clustering/segmentation algorithms included:
 ### Full version
 For running all deep-learning experiments, at the moment the following dependencies are required:
 - `conda create -n segmFr -c abailoni -c conda-forge -c pytorch nifty vigra cython inferno`
-- `inferno` :  package here: https://github.com/elmo0082/inferno/tree/matplotlib-plotting - (branch `matplotlib-plotting`)
+- `inferno` : https://github.com/elmo0082/inferno/tree/matplotlib-plotting - (branch `matplotlib-plotting`)
 - `firelight`: https://github.com/inferno-pytorch/firelight
 - `speedrun`: https://github.com/elmo0082/speedrun/tree/matplotlib-plotting - (branch `matplotlib-plotting`)
 - `neurofire`: https://github.com/abailoni/neurofire
