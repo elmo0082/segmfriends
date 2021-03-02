@@ -13,7 +13,7 @@ For running all deep-learning experiments, at the moment the following dependenc
 - (for evaluation scores, install module `cremi`: https://github.com/constantinpape/cremi_python/tree/py3)
 
 
-### Building affogata
+### Building affogato
 
 The package ```affogato``` has to be built using ```conda build .``` in the root directory.
-You 
+You can find the compiled package in your environment directory under ```<your env name>/cond-bld/linux-64```.
