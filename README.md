@@ -16,4 +16,5 @@ For running all deep-learning experiments, at the moment the following dependenc
 ### Building affogato
 
 The package ```affogato``` has to be built using ```conda build .``` in the root directory.
-You can find the compiled package in your environment directory under ```<your env name>/cond-bld/linux-64```.
+You can find the compiled package in your environment directory under ```<your conda directory>/conda-bld/linux-64```.
+The conda package can be installed with ```conda install <affogato package name>``` .
