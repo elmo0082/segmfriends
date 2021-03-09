@@ -293,7 +293,7 @@ trainer:
 
   criterion:
     loss_name: "rasenna.criteria.CustomLossFunctions.TopologicalLoss"
-    kwargs: {"SD_weight": 1.0, "topo_weight": 0.0, "topo_SD_weight": 1.0, "pretraining": False} # Choice of g_factor weights Sorensen-Dice loss against topological loss.
+    kwargs: {"SD_weight": 1.0, "topo_weight": 1.0, "topo_SD_weight": 1.0, "pretraining": False}
     # transforms:
       # have both been implemented in the prepare_target function in utils.py - Jamie
       # - neurofire.criteria.loss_transforms.RemoveSegmentationFromTarget: {} # just does [1:]

@@ -92,14 +92,14 @@ loaders:
           ignore_label: 0
           offsets:
             # Short-ranges:
-            - [-1, 0, 0]
+            # - [-1, 0, 0]
             - [0, -1, 0]
             - [0, 0, -1]
             # Mid-ranges:
-            - [-1, -1, -1]
-            - [-1, 1, 1]
-            - [-1, -1, 1]
-            - [-1, 1, -1]
+            - [0, -1, -1]
+            - [0, 1, 1]
+            - [0, -1, 1]
+            - [0, 1, -1]
             - [0, -9, 0]
             - [0, 0, -9]
             - [0, -9, -9]
@@ -111,9 +111,9 @@ loaders:
             # Long-ranges:
             - [0, -27, 0]
             - [0, 0, -27]
-            - [-2, 0, 0]
-            - [-3, 0, 0]
-            - [-4, 0, 0]
+            # - [-2, 0, 0]
+            # - [-3, 0, 0]
+            # - [-4, 0, 0]
 
 #      downscale_and_crop:
 #        # Inputs:
@@ -265,7 +265,7 @@ model:
     output_branches_specs: 
       global:
         activation: "Sigmoid"
-        out_channels: 20
+        out_channels: 16
       0:
         depth: 0
       1:
@@ -292,8 +292,8 @@ trainer:
   num_targets: 2 # We need two targets to allow to include boundary probability maps
 
   criterion:
-    loss_name: "rasenna.criteria.CustomLossFunctions.TopologicalLoss"
-    kwargs: {"SD_weight": 1.0, "topo_weight": 1.0, "topo_SD_weight": 1.0, "pretraining": False} # Choice of g_factor weights Sorensen-Dice loss against topological loss.
+    loss_name: "rasenna.criteria.CustomLossFunctions.SubdivisionLoss"
+    kwargs: {"SD_weight": 1.0, "topo_weight": 1.0, "topo_SD_weight": 1.0, "pretraining": False}
     # transforms:
       # have both been implemented in the prepare_target function in utils.py - Jamie
       # - neurofire.criteria.loss_transforms.RemoveSegmentationFromTarget: {} # just does [1:]
